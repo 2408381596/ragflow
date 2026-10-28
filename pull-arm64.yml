@@ -1,0 +1,43 @@
+name: Pull ARM64 RAGFlow images
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Clean docker cache
+        run: docker system prune -af || true
+      - name: Pull, verify and save arm64 images
+        run: |
+          set -e
+          mkdir -p images
+          for img in \
+            "infiniflow/ragflow:v0.27.3" \
+            "mysql:8.0.40" \
+            "valkey/valkey:8" \
+            "pgsty/silo:RELEASE.2026-08-06T00-00-00Z" \
+            "elasticsearch:8.9.0" \
+            "nats:2.14.2" \
+            "apache/kvrocks:2.16.0" ; do
+            echo "===== $img ====="
+            docker pull --platform linux/arm64 "$img"
+            arch=$(docker image inspect "$img" --format '{{.Architecture}}')
+            echo "ARCH=$arch"
+            fname=$(echo "$img" | tr '/:' '__')
+            docker save "$img" -o "images/${fname}.tar"
+            echo "$img -> $arch" | tee -a arch.txt
+            docker rmi "$img" >/dev/null 2>&1 || true
+          done
+          ls -lh images/
+      - name: Upload images
+        uses: actions/upload-artifact@v4
+        with:
+          name: ragflow-arm64-images
+          path: images/*.tar
+          retention-days: 7
+      - name: Upload arch check log
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-check
+          path: arch.txt
+          retention-days: 7
