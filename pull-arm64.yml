@@ -12,7 +12,7 @@ jobs:
           set -e
           mkdir -p images
           for img in \
-            "infiniflow/ragflow:v0.27.3" \
+            "infiniflow/ragflow:v1.0.0-rc2" \
             "mysql:8.0.40" \
             "valkey/valkey:8" \
             "pgsty/silo:RELEASE.2026-08-06T00-00-00Z" \
